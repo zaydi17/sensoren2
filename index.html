@@ -2,52 +2,156 @@
 <html>
 
 <head>
-<meta charset=utf-8 />
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sensors</title>
+    <meta charset=utf-8 />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- <link rel="apple-touch-icon" sizes="180x180" href="/apple-icon-180x180.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/android-icon-192x192.png">
+
+    <link rel="manifest" href="/manifest.json">
+
+    <meta name="msapplication-TileColor" content="#ffffff">
+    <meta name="msapplication-TileImage" content="/ms-icon-144x144.png">
+    <meta name="theme-color" content="#ffffff"> -->
+
+    <title>PingPong</title>
 </head>
 
 <body>
-<div>Beschleunigung (x, y, z) = (<span id="accel-x"></span>,<span id="accel-y"></span>,<span id="accel-z"></span>)</div>
-<p></p>
-<div>Neigung (x, y, z) = (<span id="neigung-x"></span>,<span id="neigung-y"></span>,<span id="neigung-z"></span>)</div>
-<p></p>
-<div>Kompass (alpha, beta, gamma) = (<span id="orientation-a"></span>,<span id="orientation-b"></span>,<span id="orientation-g"></span>)</div>
-<script>
+    
+    <canvas id="MeinCanvas"></canvas>
+    <button onclick="reset()">reset</button>
+    <script>
+        document.body.style.overflow = 'hidden';
+
+        //Als globale Variablen deklariert um mit allen Functions darauf zugreifen zu können
+        var x = 20;
+        var y = 200;
+        var dx = 1;
+        var dy = 1;
+        var R = 10;
+        var context = MeinCanvas.getContext('2d');
+
+        var padlx = 50;
+        var counter = 0;
+        var timer;
+
+        var canv = document.getElementById("MeinCanvas");
+        var WIDTH = document.documentElement.clientWidth;
+        var HEIGHT = document.documentElement.clientHeight-50;
+        canv.width = WIDTH;
+        canv.height = HEIGHT;
+       
+
+        function reset() {
+            x = 20;
+            y = 200;
+            clearInterval(timer);
+            timer = setInterval(draw, 5);
+        }
+
+        function init() {
+
+            document.addEventListener('keydown', function (event) {
+                console.log(event);
+                console.log(event.key);
+                if (event.key == 'ArrowLeft' & padlx > 0) {
+                    padlx = padlx - 5;
+                }
+                if (event.key == 'ArrowRight' & padlx + 150 < WIDTH) {
+                    padlx = padlx + 5;
+                }
+                if (event.key == 'Enter') {
 
 
-//https://www.javascript-kurs.de/javascript-sonsoren-handy-tablet-lagesensor.htm
-//https://marmelab.com/blog/2020/02/05/getting-the-ball-rolling-with-devicemotion.html
 
-//https://code.tutsplus.com/tutorials/an-introduction-to-the-device-orientation-api--cms-21067
+                }
 
 
-window.addEventListener('devicemotion', function(event){
-
-document.getElementById('accel-x').innerHTML = Math.round(event.acceleration.x *10)/10 ;
-document.getElementById('accel-y').innerHTML = Math.round(event.acceleration.y *10)/10 ;
-document.getElementById('accel-z').innerHTML = Math.round(event.acceleration.z *10)/10 ;
-
-});
-
-window.addEventListener('devicemotion', function(event){
-
-document.getElementById('neigung-x').innerHTML = Math.round(event.accelerationIncludingGravity.x ) ;
-document.getElementById('neigung-y').innerHTML = Math.round(event.accelerationIncludingGravity.y ) ;
-document.getElementById('neigung-z').innerHTML = Math.round(event.accelerationIncludingGravity.z ) ;
-
-});
-
-window.addEventListener('deviceorientation', function(event){
-
-document.getElementById('orientation-a').innerHTML = Math.round(event.alpha *10)/10 ;
-document.getElementById('orientation-b').innerHTML = Math.round(event.beta *10)/10 ;
-document.getElementById('orientation-g').innerHTML = Math.round(event.gamma *10)/10 ;
-
-});
+            });
 
 
-</script>
+            window.ondevicemotion = function (ereignis) {
+
+                padlx -= Math.round(ereignis.accelerationIncludingGravity.x * 100) / 100;
+                padlx = Math.max(padlx,0);
+                padlx = Math.min(WIDTH/3*2,padlx);
+
+            }
+
+            // window.ondevicemotion = function (ereignis) {
+
+            //     if ((ereignis.acceleration.x + ereignis.acceleration.y + ereignis.acceleration.z) > 1.0) {
+            //         x = 20;
+            //         y = 200;
+            //         timer = setInterval(draw, 5);
+            //     }
+
+            // }
+
+
+
+            draw();
+
+        }
+
+        function ball(x, y, r) {
+            context.fillStyle = "#00A3B1";
+            context.beginPath();
+            context.arc(x, y, r, 0, Math.PI * 2, true);
+            context.closePath();
+            context.fill();
+        }
+
+        function padl(x) {
+            context.fillStyle = "#B1A308";
+            context.fillRect(x, HEIGHT - 100, WIDTH / 3, 20);
+
+        }
+
+        function clear() {
+            context.fillStyle = "lightgrey";
+            context.fillRect(0, 0, WIDTH, HEIGHT);
+        }
+
+
+        function draw() {
+
+            clear()
+            padl(padlx);
+            ball(x, y, 10)
+            if (x > WIDTH - R || x < 0 + R) {
+                dx = -dx;
+            }
+            if (y > HEIGHT - R || y < 0 + R) {
+                dy = -dy;
+            }
+
+            if (y > HEIGHT - (R + 1)) {
+
+                var ausgabe = "GAME OVER, SCORE: " + counter;
+                context.font = "25px Arial";
+                context.fillText(ausgabe, 10, 50);
+                clearInterval(timer);
+                timer = 0;//zur Sicherheit auch noch null setzten
+                counter = 0;
+            }
+
+            if (y > (HEIGHT - 100 - 20 + R) & x > padlx & x < padlx + WIDTH / 3) {
+                dy = -dy;
+                counter++;
+                console.log(counter);
+            }
+
+            x = x + dx;
+            y = y - dy;
+
+        }
+
+        init();
+
+
+    </script>
 </body>
 
 </html>
